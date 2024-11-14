@@ -94,3 +94,32 @@ kalloc(void)
   return (char*)r;
 }
 
+char*
+kalloc_huge(void)
+{
+  struct run *ptr;
+
+  if(kmem.use_lock)
+    acquire(&kmem.lock);
+
+  // check if there exist 4K consecutive pages
+  ptr = kmem.freelist;
+  for(int i=0; i<1024-1; i++)
+  {
+    if(!ptr || ptr-(ptr->next) != 0x1000)
+    {
+      if(kmem.use_lock)
+        release(&kmem.lock);
+      return 0;
+    }
+    ptr = ptr->next;
+  }
+  
+  // allocate all pages
+  kmem.freelist = ptr->next;
+
+  if(kmem.use_lock)
+    release(&kmem.lock);
+
+  return (char*)ptr;
+}

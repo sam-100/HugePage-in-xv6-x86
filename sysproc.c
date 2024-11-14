@@ -130,6 +130,12 @@ sys_getpagesize(void)
   return 0;
 }
 
+static int 
+copy_to_pa(void *va, void *pa, int size) {
+  
+  return 0;
+}
+
 int 
 sys_promote(void) {
   // 1. Get arguments
@@ -149,19 +155,35 @@ sys_promote(void) {
   pde_t *pde = &myproc()->pgdir[PDX(va)];
   *pde |= PTE_PS;
 
-  // for(void *ptr=va; ptr+HUGEPGSIZE < end; ptr += HUGEPGSIZE)  // iterating at huge page intervals
-  // {
-  //   void *buffer = kalloc_huge();
-  //   copy_to_pa(ptr, buffer, HUGEPGSIZE);
-  //   // pte_t *pgtable = P2V(PTE_ADDR(*pde));
-  //   deallocate_pagetable(va);
-  //   pde_t *pde = &myproc()->pgdir[PDX(va)];
+  for(void *ptr=va; ptr+HUGEPGSIZE < end; ptr += HUGEPGSIZE)  // iterating at huge page intervals
+  {
+    void *buffer = kalloc_huge();                
+    if(buffer == 0)
+    {
+      cprintf("Failed to get physical address.");
+      return 1;
+    }
+    buffer = (void*)V2P(buffer);                       // getting real physical address
 
-  //   // inserting the address and setting pse bit on
-  //   *pde &= 0xfff;              // clear old address
-  //   *pde |= PTE_ADDR(buffer);   // add new buffer's physical address
-  //   *pde |= PTE_PS;             // set pageset bit
-  // }
+    if(!copy_to_pa(ptr, buffer, HUGEPGSIZE))
+    {
+      cprintf("Failed to copy to physical address %p\n", buffer);
+      return 2;
+    }
+
+    // pte_t *pgtable = P2V(PTE_ADDR(*pde));
+    if(!deallocate_pagetable(va))
+    {
+      cprintf("Failed to deallocate page table\n");
+      return 3;
+    }
+
+    // inserting the address and setting pse bit on
+    pde_t *pde = &myproc()->pgdir[PDX(va)];
+    *pde &= 0xfff;              // clear old address
+    *pde |= PTE_ADDR(buffer);   // add new buffer's physical address
+    *pde |= PTE_PS;             // set pageset bit
+  }
 
   return 0;
 }

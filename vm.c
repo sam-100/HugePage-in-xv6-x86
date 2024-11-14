@@ -385,6 +385,20 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
   return 0;
 }
 
+int deallocate_pagetable(void *va) {
+  pde_t *pde = &myproc()->pgdir[PDX(va)];
+  char *pgtable = (char*)P2V(PTE_ADDR(*pde));
+
+  for(int i=0; i<NPTENTRIES; i++)
+  {
+    void *page_addr = P2V(PTE_ADDR(pgtable[i]));
+    kfree(page_addr);
+  }
+  kfree(pgtable);
+
+  return 0;
+}
+
 //PAGEBREAK!
 // Blank page.
 //PAGEBREAK!
