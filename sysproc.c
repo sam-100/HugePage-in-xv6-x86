@@ -130,3 +130,8 @@ sys_getpagesize(void)
   return 0;
 }
 
+int 
+sys_promote(void) {
+  
+  return 0;
+}
