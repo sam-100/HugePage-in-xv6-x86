@@ -24,6 +24,7 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int getpa(void *va);
+int getpagesize(void *va);
 
 // ulib.c
 int stat(const char*, struct stat*);

@@ -104,3 +104,29 @@ sys_getpa(void)
   return address;
 
 }
+
+int 
+sys_getpagesize(void)
+{
+  int va;
+  argint(0, &va);
+
+  // get page dir entry
+  pte_t *pgdir = myproc()->pgdir;
+  pde_t pde = pgdir[PDX(va)];
+
+  // check if pse is set
+  if(pde & PTE_PS)
+    return 1;
+
+  // get page table entry
+  pte_t *pgtable = P2V(PTE_ADDR(pde));
+  pte_t pte = pgtable[PTX(va)];
+
+  // check if page is present
+  if(!(pte & PTE_P))
+    cprintf("Page table entry is absent!\n");
+
+  return 0;
+}
+
