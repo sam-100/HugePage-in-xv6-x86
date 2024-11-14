@@ -83,12 +83,14 @@ struct segdesc {
 #define NPDENTRIES      1024    // # directory entries per page directory
 #define NPTENTRIES      1024    // # PTEs per page table
 #define PGSIZE          4096    // bytes mapped by a page
+#define HUGEPGSIZE      NPTENTRIES*PGSIZE
 
 #define PTXSHIFT        12      // offset of PTX in a linear address
 #define PDXSHIFT        22      // offset of PDX in a linear address
 
 #define PGROUNDUP(sz)  (((sz)+PGSIZE-1) & ~(PGSIZE-1))
 #define PGROUNDDOWN(a) (((a)) & ~(PGSIZE-1))
+#define HUGEPGROUNDUP(sz)  (((sz)+HUGEPGSIZE-1) & ~(HUGEPGSIZE-1))
 
 // Page table/directory entry flags.
 #define PTE_P           0x001   // Present

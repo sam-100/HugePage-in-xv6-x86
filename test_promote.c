@@ -2,25 +2,41 @@
 #include "stat.h"
 #include "user.h"
 
-#define M 1024*1024
+#define PGSIZE 4*1024
+#define HUGEPGSIZE 1024*PGSIZE
 
+#define BUFFER_SIZE (10*HUGEPGSIZE+HUGEPGSIZE)
+#define INT_SIZE 4
 int main(int argc, char *argv[])
 {
-    int *num = (int *) malloc(4*M);
-    for(int i=0; i<M; i++)
+    int *num = (int *)malloc(BUFFER_SIZE);
+    for(int i=0; i<BUFFER_SIZE/INT_SIZE; i++)
         num[i] = i;
     
-    if(getpagesize(num))
-        printf(1, "Huge page = Enabled\n");
-    else 
-        printf(1, "Huge page = Disabled\n");
+    printf(1, "Before page promotion: \n");
+    for(int i=0; i<BUFFER_SIZE/4; i += HUGEPGSIZE/4)
+        printf(1, "%d | ", num[i]);
+    printf(1, "\n");
 
-    promote(num);
+    // if(getpagesize(num))
+    //     printf(1, "Huge page = Enabled\n");
+    // else 
+    //     printf(1, "Huge page = Disabled\n");
 
-    if(getpagesize(num))
-        printf(1, "Huge page = Enabled\n");
-    else 
-        printf(1, "Huge page = Disabled\n");
+    promote(num, BUFFER_SIZE);
+    
+    printf(1, "\nAfter page promotion: \n");
+    for(int i=0; i<BUFFER_SIZE/4; i += HUGEPGSIZE/4)
+        printf(1, "%d\t", num[i]);
+    printf(1, "\n");
+
+
+    // if(getpagesize(num))
+    //     printf(1, "Huge page = Enabled\n");
+    // else 
+    //     printf(1, "Huge page = Disabled\n");
+
+    printf(1, "success!\n");
 
     return 0;
 }
