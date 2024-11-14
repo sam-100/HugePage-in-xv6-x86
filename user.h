@@ -25,6 +25,7 @@ int sleep(int);
 int uptime(void);
 int getpa(void *va);
 int getpagesize(void *va);
+int promote(void *va);
 
 // ulib.c
 int stat(const char*, struct stat*);

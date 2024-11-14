@@ -15,9 +15,12 @@ int main(int argc, char *argv[])
     else 
         printf(1, "Huge page = Disabled\n");
 
-    // promote(num);
+    promote(num);
 
-    // printf("page size after promote(): %d\n", getpagesize(num));
+    if(getpagesize(num))
+        printf(1, "Huge page = Enabled\n");
+    else 
+        printf(1, "Huge page = Disabled\n");
 
     return 0;
 }
