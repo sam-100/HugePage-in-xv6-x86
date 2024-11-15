@@ -23,7 +23,11 @@ int main(int argc, char *argv[])
     // else 
     //     printf(1, "Huge page = Disabled\n");
 
-    promote(num, BUFFER_SIZE);
+    if(promote(num, BUFFER_SIZE) != 0)
+    {
+        printf(1, "promote() syscall failed\n");
+        return 0;
+    }
     
     printf(1, "\nAfter page promotion: \n");
     for(int i=0; i<BUFFER_SIZE/4; i += HUGEPGSIZE/4)

@@ -130,9 +130,35 @@ sys_getpagesize(void)
   return 0;
 }
 
+static pte_t *getpte(void *va) {
+  pde_t *pgdir = myproc()->pgdir;
+  pde_t pde = pgdir[PDX(va)];
+  uint *pgtable = P2V(PTE_ADDR(pde));
+  return &pgtable[PTX(va)];
+}
+
 static int 
-copy_to_pa(void *va, void *pa, int size) {
-  
+copy_to_pa(char *va, char *pa, int size) {
+  cprintf("copy_to_pa(): va = %p, pa = %p, size = %d\n", va, pa, size);
+  char *temp = (char*)kalloc();
+  for(int i=0; i<size; i += PGSIZE)         // for each page size chunk
+  {
+    // map 'pa+i' to temp
+    pte_t *pte = getpte((void*)temp);  
+    *pte &= 0xfff;                      // clear previous address
+    *pte |= (uint)(pa+i);               // map the physical address
+    cprintf("Mapped a page\n");
+
+    // copy the page
+    for(int j=0; j<PGSIZE; j++)
+    {
+      cprintf("Fetching from %p\n", va+i+j);
+      temp[j] = *(va+i+j);
+    }
+    cprintf("Written a page\n");
+  }
+
+  kfree((char*)temp);
   return 0;
 }
 
@@ -164,12 +190,14 @@ sys_promote(void) {
       return 1;
     }
     buffer = (void*)V2P(buffer);                       // getting real physical address
-
+    cprintf("after kalloc_huge()\n");
+    
     if(!copy_to_pa(ptr, buffer, HUGEPGSIZE))
     {
       cprintf("Failed to copy to physical address %p\n", buffer);
       return 2;
     }
+    cprintf("after copy\n");
 
     // pte_t *pgtable = P2V(PTE_ADDR(*pde));
     if(!deallocate_pagetable(va))
