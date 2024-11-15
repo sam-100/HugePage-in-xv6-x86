@@ -387,17 +387,56 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 
 int deallocate_pagetable(void *va) {
   pde_t *pde = &myproc()->pgdir[PDX(va)];
-  char *pgtable = (char*)P2V(PTE_ADDR(*pde));
+  if((*pde & PTE_P) == 0)
+  {
+    cprintf("page directory entry is not present.\n");
+    return 0;
+  }
+  pte_t *pgtable = (pte_t *)P2V(PTE_ADDR(*pde));
 
   for(int i=0; i<NPTENTRIES; i++)
   {
+    
     void *page_addr = P2V(PTE_ADDR(pgtable[i]));
     kfree(page_addr);
+    pgtable[i] &= ~PTE_P;
   }
-  kfree(pgtable);
+  kfree((char*)pgtable);
 
   return 0;
 }
+
+static pte_t *getpte(void *va) {
+  pde_t *pgdir = myproc()->pgdir;
+  pde_t pde = pgdir[PDX(va)];
+  uint *pgtable = P2V(PTE_ADDR(pde));
+  return &pgtable[PTX(va)];
+}
+
+int 
+copy_to_pa(char *va, char *pa, int size) {
+  cprintf("copy_to_pa(): va = %p, pa = %p, size = %d\n", va, pa, size);
+  char *temp = (char*)kalloc();
+  for(int i=0; i<size; i += PGSIZE)         // for each page size chunk
+  {
+    // map 'pa+i' to temp
+    pte_t *pte = getpte((void*)temp);  
+    *pte &= 0xfff;                      // clear previous address
+    *pte |= (uint)(pa+i);               // map the physical address
+    // mappages(myproc()->pgdir, (void*)(va+i), PGSIZE, (uint)pa, 0);
+
+    // copy the page
+    for(int j=0; j<PGSIZE; j++)
+    {
+      temp[j] = 2; //*(va+i+j);
+    }
+  }
+  cprintf("Done!");
+
+  // kfree((char*)temp);
+  return 0;
+}
+
 
 //PAGEBREAK!
 // Blank page.

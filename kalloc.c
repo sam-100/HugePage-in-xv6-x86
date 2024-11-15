@@ -105,24 +105,23 @@ kalloc_huge(void)
   struct run *ptr = kmem.freelist;
   while(*start)
   {
-    cprintf("*start = %p\n", *start);
     ptr = *start;
     for(int i=0; i<1024-1; i++)
     {
-      // cprintf("ptr = %p\n", ptr);
       if(ptr == 0 || (char*)(ptr->next) != (char*)ptr-PGSIZE)
         break;
       ptr = ptr->next;
     }
 
+    int pages = ((char*)(*start)-(char*)ptr+PGSIZE)/PGSIZE;
+    cprintf("Found a chunk of %d pages.\n", pages);
+    
     if((char*)(*start)-(char*)ptr == HUGEPGSIZE-PGSIZE || ptr == 0)
     {
       cprintf("Found!\n");
       break;
     }
 
-    int pages = ((char*)(*start)-(char*)ptr)/PGSIZE;
-    cprintf("Found a chunk of %d pages.\n", pages);
     start = &ptr->next;
   }
   
@@ -134,7 +133,7 @@ kalloc_huge(void)
     return 0;    
   }
 
-  cprintf("Consecutive memory spotted from %p to %p = %p\n", ptr, *start, (char*)(*start)-(char*)ptr+PGSIZE);
+  cprintf("Consecutive memory spotted from %p to %p = %p\n", (char*)ptr, (char*)*start+PGSIZE, (char*)(*start)-(char*)ptr+PGSIZE);
   // allocate all pages
   *start = ptr->next;
 

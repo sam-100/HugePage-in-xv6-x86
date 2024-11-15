@@ -5,7 +5,7 @@
 #define PGSIZE 4*1024
 #define HUGEPGSIZE 1024*PGSIZE
 
-#define BUFFER_SIZE (10*HUGEPGSIZE+HUGEPGSIZE)
+#define BUFFER_SIZE (HUGEPGSIZE+HUGEPGSIZE)
 #define INT_SIZE 4
 int main(int argc, char *argv[])
 {
