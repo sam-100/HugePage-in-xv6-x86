@@ -103,6 +103,7 @@ kalloc_huge(void)
   // search for 1K consecutive pages
   struct run **start = &kmem.freelist;
   struct run *ptr = kmem.freelist;
+  cprintf("Starting search from %p\n", *start);
   while(*start)
   {
     ptr = *start;
@@ -112,13 +113,11 @@ kalloc_huge(void)
         break;
       ptr = ptr->next;
     }
-
-    int pages = ((char*)(*start)-(char*)ptr+PGSIZE)/PGSIZE;
-    cprintf("Found a chunk of %d pages.\n", pages);
     
     if((char*)(*start)-(char*)ptr == HUGEPGSIZE-PGSIZE || ptr == 0)
     {
-      cprintf("Found!\n");
+      int pages = ((char*)(*start)-(char*)ptr+PGSIZE)/PGSIZE;
+      cprintf("Found a chunk of %d pages.\n", pages);
       break;
     }
 

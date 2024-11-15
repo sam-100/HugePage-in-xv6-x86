@@ -180,8 +180,10 @@ sys_promote(void) {
     *pde &= 0xfff;                                      // clear old address
     *pde |= PTE_ADDR(buffer);                           // add new buffer's physical address
     *pde |= PTE_P | PTE_W | PTE_U | PTE_PS;             // set pageset bit
-    lcr3(V2P(myproc()->pgdir));                         // Reload CR3 to flush the TLB
 
+    // Reload CR3 to flush the TLB
+    lcr3(V2P(myproc()->pgdir));   
+                          
     cprintf("New pa = %p for va = %p\n", PTE_ADDR(*pde), va);
   }
 

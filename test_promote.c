@@ -5,13 +5,13 @@
 #define PGSIZE 4*1024
 #define HUGEPGSIZE 1024*PGSIZE
 
-#define BUFFER_SIZE (HUGEPGSIZE+HUGEPGSIZE)
+#define BUFFER_SIZE (5*HUGEPGSIZE)
 #define INT_SIZE 4
 int main(int argc, char *argv[])
 {
     int *num = (int *)malloc(BUFFER_SIZE);
     for(int i=0; i<BUFFER_SIZE/INT_SIZE; i++)
-        num[i] = i;
+        num[i] = i/PGSIZE;
     
     printf(1, "Before page promotion: \n");
     for(int i=0; i<BUFFER_SIZE/4; i += HUGEPGSIZE/4)

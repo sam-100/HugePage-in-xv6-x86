@@ -415,7 +415,7 @@ static pte_t *getpte(void *va) {
 
 int 
 copy_to_pa(char *va, char *pa, int size) {
-  cprintf("copy_to_pa(): va = %p, pa = %p, size = %d\n", va, pa, size);
+  // cprintf("copy_to_pa(): va = %p, pa = %p, size = %d\n", va, pa, size);
   char *temp = (char*)kalloc();
   for(int i=0; i<size; i += PGSIZE)         // for each page size chunk
   {
@@ -431,7 +431,6 @@ copy_to_pa(char *va, char *pa, int size) {
       temp[j] = 2; //*(va+i+j);
     }
   }
-  cprintf("Done!");
 
   // kfree((char*)temp);
   return 0;
