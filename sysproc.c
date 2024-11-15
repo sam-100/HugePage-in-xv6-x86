@@ -132,6 +132,25 @@ sys_getpagesize(void)
 
 int 
 sys_promote(void) {
+  // enable pse
+  uint cr4;
+  asm volatile ("mov %%cr4, %0" : "=r" (cr4));
+  cr4 |= (1 << 4);
+  asm volatile ("mov %0, %%cr4" :: "r" (cr4));
+
+  // Flush TLB
+    uint cr3;
+    __asm__ __volatile__("mov %%cr3, %0" : "=r"(cr3));  // Get the value of CR3
+    __asm__ __volatile__("mov %0, %%cr3" : : "r"(cr3));  // Write it back to CR3 to flush TLB
+
+  // check paging is enabled or not
+  asm volatile ("mov %0, %%cr4" : "=r" (cr4));
+  if(cr4 & (1 << 4))
+  {
+    cprintf("Paging is disabled.\n");
+    exit();
+  }
+
   // 1. Get arguments
   void *va;
   int size;
@@ -181,9 +200,9 @@ sys_promote(void) {
     *pde |= PTE_ADDR(buffer);                           // add new buffer's physical address
     *pde |= PTE_P | PTE_W | PTE_U | PTE_PS;             // set pageset bit
 
-    // Reload CR3 to flush the TLB
+    // Flush TLB
     lcr3(V2P(myproc()->pgdir));   
-                          
+
     cprintf("New pa = %p for va = %p\n", PTE_ADDR(*pde), va);
   }
 

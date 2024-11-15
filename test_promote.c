@@ -5,7 +5,7 @@
 #define PGSIZE 4*1024
 #define HUGEPGSIZE 1024*PGSIZE
 
-#define BUFFER_SIZE (5*HUGEPGSIZE)
+#define BUFFER_SIZE (3*HUGEPGSIZE)
 #define INT_SIZE 4
 int main(int argc, char *argv[])
 {
@@ -31,7 +31,15 @@ int main(int argc, char *argv[])
     
     printf(1, "\nAfter page promotion: \n");
     for(int i=0; i<BUFFER_SIZE/4; i += HUGEPGSIZE/4)
-        printf(1, "%d\t", num[i]);
+    {
+        if(getpagesize(num+i) == 0)
+            printf(1, "Huge page disabled.\n");
+        else
+            printf(1, "Huge page enabled.\n");
+        printf(1, "virtual address: %p\n", num+i);
+        printf(1, "physical address: %p\n", getpa(num+i) & ~0x3fffff);
+        printf(1, "%d\n", num[i]);
+    }
     printf(1, "\n");
 
 
