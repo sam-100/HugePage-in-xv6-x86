@@ -194,3 +194,9 @@ sys_printPDE(void)
 
   cprintf("PDE = %p\n", myproc()->pgdir[PDX(va)]);
 }
+
+int 
+sys_get_free_pa_space(void)
+{
+  return kfreespace();
+}

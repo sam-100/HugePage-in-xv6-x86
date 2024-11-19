@@ -157,3 +157,21 @@ kalloc_huge(void)
     release(&kmem.lock);
   return (char*)start;
 }
+
+
+int kfreespace(void) {
+  if(kmem.use_lock)
+    acquire(&kmem.lock);
+  
+  struct run *ptr = kmem.freelist;
+  int cnt = 0;
+  while(ptr)
+  {
+    cnt++;
+    ptr=ptr->next;
+  }
+
+  if(kmem.use_lock)
+    release(&kmem.lock);
+  return cnt;
+}

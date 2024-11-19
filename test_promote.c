@@ -5,7 +5,7 @@
 #define PGSIZE 4*1024
 #define HUGEPGSIZE 1024*PGSIZE
 
-#define BUFFER_SIZE (5*HUGEPGSIZE)
+#define BUFFER_SIZE (15*HUGEPGSIZE)
 #define INT_SIZE 4
 
 void print(const int *arr, int size, int jump) {

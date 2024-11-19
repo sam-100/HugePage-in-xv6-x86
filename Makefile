@@ -183,6 +183,7 @@ UPROGS=\
 	_zombie\
 	_test_getpa\
 	_test_promote\
+	_memstatus\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
