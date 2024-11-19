@@ -23,3 +23,4 @@
 #define SYS_getpa  22
 #define SYS_getpagesize 23
 #define SYS_promote 24
+#define SYS_printPDE 25

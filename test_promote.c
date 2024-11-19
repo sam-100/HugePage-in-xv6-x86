@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
         printf(1, "promote() syscall failed\n");
         return 0;
     }
-
+    
     printf(1, "After page promotion: ");
     print(num, BUFFER_SIZE/INT_SIZE, HUGEPGSIZE/INT_SIZE);
 

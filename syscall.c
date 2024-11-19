@@ -106,6 +106,7 @@ extern int sys_uptime(void);
 extern int sys_getpa(void);
 extern int sys_getpagesize(void);
 extern int sys_promote(void);
+extern int sys_printPDE(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -132,6 +133,7 @@ static int (*syscalls[])(void) = {
 [SYS_getpa]   sys_getpa, 
 [SYS_getpagesize] sys_getpagesize, 
 [SYS_promote] sys_promote, 
+[SYS_printPDE] sys_printPDE,
 };
 
 void

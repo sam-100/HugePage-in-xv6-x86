@@ -26,6 +26,7 @@ int uptime(void);
 int getpa(void *va);
 int getpagesize(void *va);
 int promote(void *va, int size);
+void printPDE(void *va);
 
 // ulib.c
 int stat(const char*, struct stat*);

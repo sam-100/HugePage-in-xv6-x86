@@ -174,7 +174,7 @@ sys_promote(void) {
     cprintf("Deallocated 1024 pages at %p\n", ptr);
 
     // inserting the address and setting pse bit on
-    pde_t *pde = &myproc()->pgdir[PDX(va)];
+    pde_t *pde = &myproc()->pgdir[PDX(ptr)];
     *pde &= 0xfff;                                      // clear old address
     *pde |= PTE_ADDR(buffer);                           // add new buffer's physical address
     *pde |= PTE_P | PTE_W | PTE_U | PTE_PS;             // set pageset bit
@@ -184,4 +184,13 @@ sys_promote(void) {
   }
 
   return 0;
+}
+
+void 
+sys_printPDE(void)
+{
+  void *va;
+  argptr(0, (char**)&va, sizeof(va));
+
+  cprintf("PDE = %p\n", myproc()->pgdir[PDX(va)]);
 }
