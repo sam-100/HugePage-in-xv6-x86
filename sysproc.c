@@ -166,17 +166,19 @@ sys_promote(void) {
   for(void *ptr=va; ptr+HUGEPGSIZE < end; ptr += HUGEPGSIZE)  // iterating at huge page intervals
   {
     void *buffer = (void*)V2P(kalloc_huge());
-    copy_to_pa(ptr, buffer, HUGEPGSIZE);
-    deallocate_pagetable(va);
+    cprintf("Address: %p\n", buffer);
 
-    // inserting the address and setting pse bit on
-    pde_t *pde = &myproc()->pgdir[PDX(va)];
-    *pde &= 0xfff;                                      // clear old address
-    *pde |= PTE_ADDR(buffer);                           // add new buffer's physical address
-    *pde |= PTE_P | PTE_W | PTE_U | PTE_PS;             // set pageset bit
+    // copy_to_pa(ptr, buffer, HUGEPGSIZE);
+    // deallocate_pagetable(va);
 
-    // Invalidate TLB
-    lcr3(V2P(myproc()->pgdir));   
+    // // inserting the address and setting pse bit on
+    // pde_t *pde = &myproc()->pgdir[PDX(va)];
+    // *pde &= 0xfff;                                      // clear old address
+    // *pde |= PTE_ADDR(buffer);                           // add new buffer's physical address
+    // *pde |= PTE_P | PTE_W | PTE_U | PTE_PS;             // set pageset bit
+
+    // // Invalidate TLB
+    // lcr3(V2P(myproc()->pgdir));   
   }
 
   return 0;

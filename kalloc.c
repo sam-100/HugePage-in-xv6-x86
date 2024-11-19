@@ -94,48 +94,66 @@ kalloc(void)
   return (char*)r;
 }
 
+int is_aligned(uint ptr, uint offset) {
+  return (ptr%offset == 0);
+}
+
 char*
 kalloc_huge(void)
 {
   if(kmem.use_lock)
     acquire(&kmem.lock);
 
-  struct run **start = &kmem.freelist;
-  struct run *ptr = kmem.freelist;
-
-  // search for 1K consecutive pages
-  while(*start)
+  // search for consecutive pages
+  struct run *curr = kmem.freelist, *prev = 0, *start = 0;
+  while(curr)
   {
-    ptr = *start;
-    for(int i=0; i<1024-1; i++)
+    // check alignment
+    if(!is_aligned((uint)curr+PGSIZE, HUGEPGSIZE))
     {
-      if(ptr == 0 || (char*)(ptr->next) != (char*)ptr-PGSIZE)
-        break;
-      ptr = ptr->next;
+      prev=curr;
+      curr = curr->next;
+      continue;
     }
     
-    if((char*)(*start)-(char*)ptr == HUGEPGSIZE-PGSIZE || ptr == 0)
+    // search ... 
+    int count = HUGEPGSIZE/PGSIZE-1;
+    struct run *ptr = curr;
+    while(ptr && count-- && ((uint)ptr - (uint)ptr->next == PGSIZE))
+      ptr = ptr->next;
+
+    // if found, set start and break
+    if(count == -1)
     {
-      // int pages = ((char*)(*start)-(char*)ptr+PGSIZE)/PGSIZE;
+      start=ptr;
       break;
     }
 
-    start = &ptr->next;
+    // update curr pointer
+    prev=curr;
+    curr = ptr->next;    
   }
-  
-  // if not found
-  if(*start == 0 || ptr == 0 || (char*)(*start)-(char*)ptr < HUGEPGSIZE-PGSIZE )
+
+  // if not found, exit
+  if(!curr || !start)
   {
+    cprintf("kalloc() failed!\n");
     if(kmem.use_lock)
       release(&kmem.lock);
-    cprintf("kalloc(): Not found.\n");
-    exit();    
+    exit();
   }
 
-  // allocate all pages
-  *start = ptr->next;
+  // allocate
+  if(prev == 0)
+    kmem.freelist = start->next;
+  else
+    prev->next = start->next;
 
+  // clean all pages
+  memset((void*)start, 0, HUGEPGSIZE);
+
+  // return starting address
   if(kmem.use_lock)
     release(&kmem.lock);
-  return (char*)ptr;
+  return (char*)start;
 }
