@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    printf(1, "\nAfter page promotion: \n");
+    printf(1, "After page promotion: ");
     print(num, BUFFER_SIZE/INT_SIZE, HUGEPGSIZE/INT_SIZE);
 
     printf(1, "success!\n");

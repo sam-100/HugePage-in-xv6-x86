@@ -165,8 +165,7 @@ sys_promote(void) {
 
   for(void *ptr=va; ptr+HUGEPGSIZE < end; ptr += HUGEPGSIZE)  // iterating at huge page intervals
   {
-    void *buffer = kalloc_huge();                
-    buffer = (void*)V2P(buffer);    
+    void *buffer = (void*)V2P(kalloc_huge());
     copy_to_pa(ptr, buffer, HUGEPGSIZE);
     deallocate_pagetable(va);
 
