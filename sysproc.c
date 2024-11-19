@@ -137,12 +137,6 @@ void enable_paging_extension() {
     asm volatile ("mov %0, %%cr4" :: "r" (cr4));
 }
 
-void flush_tlb() {
-    uint cr3;
-    __asm__ __volatile__("mov %%cr3, %0" : "=r"(cr3));  // Get the value of CR3
-    __asm__ __volatile__("mov %0, %%cr3" : : "r"(cr3));  // Write it back to CR3 to flush TLB
-}
-
 int is_paging_extension_enabled() {
     uint cr4;
     asm volatile ("mov %%cr4, %0" : "=r" (cr4));
@@ -152,7 +146,7 @@ int is_paging_extension_enabled() {
 int 
 sys_promote(void) {
   enable_paging_extension();
-  flush_tlb();
+  lcr3(V2P(myproc()->pgdir));   
   if(!is_paging_extension_enabled())
   {
     cprintf("Paging is disabled.\n");
@@ -165,42 +159,16 @@ sys_promote(void) {
   argptr(0, (char **)&va, sizeof(va));
   argint(1, &size);
   void *end = va+size;
-  cprintf("Virtual address from %p to %p\n", va, end);
+
 
   va = (void*)HUGEPGROUNDUP((uint)va);
-  cprintf("Aligned Virtual address from %p to %p\n", va, end);
-
-  cprintf("Total pages = %d\n", (int)((end-va)/(4*1024)));
-  cprintf("Total Huge pages = %d\n", (int)((end-va)/(4*1024*1024)));
-
-  pde_t *pde = &myproc()->pgdir[PDX(va)];
-  *pde |= PTE_PS;
 
   for(void *ptr=va; ptr+HUGEPGSIZE < end; ptr += HUGEPGSIZE)  // iterating at huge page intervals
   {
     void *buffer = kalloc_huge();                
-    if(buffer == 0)
-    {
-      cprintf("Failed to get physical address.");
-      return 1;
-    }
-    cprintf("kalloc_huge(): returned %p\n", buffer);
-
-    buffer = (void*)V2P(buffer);                       // getting real physical address    
-    if(copy_to_pa(ptr, buffer, HUGEPGSIZE) != 0)
-    {
-      cprintf("Failed to copy to physical address %p\n", buffer);
-      return 2;
-    }
-    cprintf("copy_to_pa(): success.\n");
-
-    // pte_t *pgtable = P2V(PTE_ADDR(*pde));
-    if(deallocate_pagetable(va) != 0)
-    {
-      cprintf("Failed to deallocate page table\n");
-      return 3;
-    }
-    cprintf("deallocate_pagetable(): success\n");
+    buffer = (void*)V2P(buffer);    
+    copy_to_pa(ptr, buffer, HUGEPGSIZE);
+    deallocate_pagetable(va);
 
     // inserting the address and setting pse bit on
     pde_t *pde = &myproc()->pgdir[PDX(va)];
@@ -208,12 +176,9 @@ sys_promote(void) {
     *pde |= PTE_ADDR(buffer);                           // add new buffer's physical address
     *pde |= PTE_P | PTE_W | PTE_U | PTE_PS;             // set pageset bit
 
-    // Flush TLB
+    // Invalidate TLB
     lcr3(V2P(myproc()->pgdir));   
-
-    cprintf("New pa = %p for va = %p\n", PTE_ADDR(*pde), va);
   }
-
 
   return 0;
 }

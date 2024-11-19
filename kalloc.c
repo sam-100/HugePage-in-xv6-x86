@@ -100,10 +100,10 @@ kalloc_huge(void)
   if(kmem.use_lock)
     acquire(&kmem.lock);
 
-  // search for 1K consecutive pages
   struct run **start = &kmem.freelist;
   struct run *ptr = kmem.freelist;
-  cprintf("Starting search from %p\n", *start);
+
+  // search for 1K consecutive pages
   while(*start)
   {
     ptr = *start;
@@ -116,8 +116,7 @@ kalloc_huge(void)
     
     if((char*)(*start)-(char*)ptr == HUGEPGSIZE-PGSIZE || ptr == 0)
     {
-      int pages = ((char*)(*start)-(char*)ptr+PGSIZE)/PGSIZE;
-      cprintf("Found a chunk of %d pages.\n", pages);
+      // int pages = ((char*)(*start)-(char*)ptr+PGSIZE)/PGSIZE;
       break;
     }
 
@@ -129,15 +128,14 @@ kalloc_huge(void)
   {
     if(kmem.use_lock)
       release(&kmem.lock);
-    return 0;    
+    cprintf("kalloc(): Not found.\n");
+    exit();    
   }
 
-  cprintf("Consecutive memory spotted from %p to %p = %p\n", (char*)ptr, (char*)*start+PGSIZE, (char*)(*start)-(char*)ptr+PGSIZE);
   // allocate all pages
   *start = ptr->next;
 
   if(kmem.use_lock)
     release(&kmem.lock);
-
   return (char*)ptr;
 }

@@ -390,7 +390,7 @@ int deallocate_pagetable(void *va) {
   if((*pde & PTE_P) == 0)
   {
     cprintf("page directory entry is not present.\n");
-    return 0;
+    exit();
   }
   pte_t *pgtable = (pte_t *)P2V(PTE_ADDR(*pde));
 
@@ -415,7 +415,6 @@ static pte_t *getpte(void *va) {
 
 int 
 copy_to_pa(char *va, char *pa, int size) {
-  // cprintf("copy_to_pa(): va = %p, pa = %p, size = %d\n", va, pa, size);
   char *temp = (char*)kalloc();
   for(int i=0; i<size; i += PGSIZE)         // for each page size chunk
   {
