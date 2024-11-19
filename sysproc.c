@@ -130,22 +130,30 @@ sys_getpagesize(void)
   return 0;
 }
 
-int 
-sys_promote(void) {
-  // enable pse
-  uint cr4;
-  asm volatile ("mov %%cr4, %0" : "=r" (cr4));
-  cr4 |= (1 << 4);
-  asm volatile ("mov %0, %%cr4" :: "r" (cr4));
+void enable_paging_extension() {
+    uint cr4;
+    asm volatile ("mov %%cr4, %0" : "=r" (cr4));
+    cr4 |= CR4_PSE;
+    asm volatile ("mov %0, %%cr4" :: "r" (cr4));
+}
 
-  // Flush TLB
+void flush_tlb() {
     uint cr3;
     __asm__ __volatile__("mov %%cr3, %0" : "=r"(cr3));  // Get the value of CR3
     __asm__ __volatile__("mov %0, %%cr3" : : "r"(cr3));  // Write it back to CR3 to flush TLB
+}
 
-  // check paging is enabled or not
-  asm volatile ("mov %0, %%cr4" : "=r" (cr4));
-  if(cr4 & (1 << 4))
+int is_paging_extension_enabled() {
+    uint cr4;
+    asm volatile ("mov %%cr4, %0" : "=r" (cr4));
+    return (cr4 & CR4_PSE) != 0;
+}
+
+int 
+sys_promote(void) {
+  enable_paging_extension();
+  flush_tlb();
+  if(!is_paging_extension_enabled())
   {
     cprintf("Paging is disabled.\n");
     exit();
