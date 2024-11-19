@@ -39,6 +39,8 @@ walkpgdir(pde_t *pgdir, const void *va, int alloc)
   pte_t *pgtab;
 
   pde = &pgdir[PDX(va)];
+  if(*pde & PTE_PS)
+    return pde;
   if(*pde & PTE_P){
     pgtab = (pte_t*)P2V(PTE_ADDR(*pde));
   } else {
@@ -264,6 +266,12 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
   a = PGROUNDUP(newsz);
   for(; a  < oldsz; a += PGSIZE){
     pte = walkpgdir(pgdir, (char*)a, 0);
+    if(*pte & PTE_PS)
+    {
+      *pte = 0;
+      a += HUGEPGSIZE-PGSIZE;
+      continue;
+    }
     if(!pte)
       a = PGADDR(PDX(a) + 1, 0, 0) - PGSIZE;
     else if((*pte & PTE_P) != 0){
@@ -276,6 +284,28 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
     }
   }
   return newsz;
+}
+
+int get_pa_size(const pte_t *pgdir) {
+  int cnt = 0;
+  for(int i=0; i<NPDENTRIES; i++)
+  {
+    if((pgdir[i] & PTE_P) == 0)
+      continue;
+    if((pgdir[i] & PTE_PS) != 0)
+    {
+      cnt += NPTENTRIES; 
+      continue;
+    }
+    pte_t *pgtable = P2V(PTE_ADDR(pgdir[i]));
+    for(int i=0; i<NPTENTRIES; i++)
+    {
+      if((pgtable[i] & PTE_P) != 0)
+        cnt++;  // cprintf("Physical memory allocated = %d Pages\n", get_pa_size(myproc()->pgdir));
+
+    }
+  }
+  return cnt;
 }
 
 // Free a page table and all the physical memory pages
@@ -295,6 +325,7 @@ freevm(pde_t *pgdir)
     }
   }
   kfree((char*)pgdir);
+
 }
 
 // Clear PTE_U on a page. Used to create an inaccessible
