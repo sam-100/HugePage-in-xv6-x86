@@ -34,5 +34,5 @@ int main(int argc, char *argv[])
 
     printf(1, "success!\n");
 
-    return 0;
+    exit();
 }

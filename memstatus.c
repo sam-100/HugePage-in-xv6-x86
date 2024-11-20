@@ -3,6 +3,6 @@
 
 
 int main(int argc, char **argv) {
-    printf(1, "%d free pages left in the memory.\n", get_free_pa_space());
-    return 0;
+    printf(1, "Available Physical memory = %d pages\n", get_free_pa_space());
+    exit();
 }
