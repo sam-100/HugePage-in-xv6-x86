@@ -135,28 +135,28 @@ sys_getpagesize(void)
   return 0;
 }
 
-void enable_paging_extension() {
-    uint cr4;
-    asm volatile ("mov %%cr4, %0" : "=r" (cr4));
-    cr4 |= CR4_PSE;
-    asm volatile ("mov %0, %%cr4" :: "r" (cr4));
-}
+// void enable_paging_extension() {
+//     uint cr4;
+//     asm volatile ("mov %%cr4, %0" : "=r" (cr4));
+//     cr4 |= CR4_PSE;
+//     asm volatile ("mov %0, %%cr4" :: "r" (cr4));
+// }
 
-int is_paging_extension_enabled() {
-    uint cr4;
-    asm volatile ("mov %%cr4, %0" : "=r" (cr4));
-    return (cr4 & CR4_PSE) != 0;
-}
+// int is_paging_extension_enabled() {
+//     uint cr4;
+//     asm volatile ("mov %%cr4, %0" : "=r" (cr4));
+//     return (cr4 & CR4_PSE) != 0;
+// }
 
 int 
 sys_promote(void) {
-  enable_paging_extension();
-  lcr3(V2P(myproc()->pgdir));   
-  if(!is_paging_extension_enabled())
-  {
-    cprintf("Paging is disabled.\n");
-    exit();
-  }
+  // enable_paging_extension();
+  // lcr3(V2P(myproc()->pgdir));   
+  // if(!is_paging_extension_enabled())
+  // {
+  //   cprintf("Paging is disabled.\n");
+  //   exit();
+  // }
 
   // 1. Get arguments
   void *va;
@@ -198,4 +198,49 @@ int
 sys_get_free_pa_space(void)
 {
   return kfreespace();
+}
+
+int 
+sys_demote(void) {
+  // 1. Get arguments
+  void *va;
+  int size;
+  argptr(0, (char**)&va, sizeof(va));
+  argint(1, &size);
+  
+  size -= (int)(HUGEPGROUNDUP((uint)va)-(uint)va);
+  va = (void*)HUGEPGROUNDUP((uint)va);
+
+  // 2. For each pde from va to va+size 
+  for(void* ptr = va; ptr < va+size; ptr += HUGEPGSIZE)
+  {
+    // 2.1. If its not huge page, skip.
+    pte_t *pgdir = myproc()->pgdir;
+    pte_t *pde = &pgdir[PDX(ptr)];
+    if(!(*pde & PTE_PS))
+      continue;
+
+    // 2.2. allocate a page table and all of its pages.
+    // 2.3. copy all data to newly allocated page table.
+    pte_t *pgtable = (pte_t*)kalloc();
+    memset(pgtable, 0, PGSIZE);
+    for(int i=0; i<NPTENTRIES; i++)
+    {
+      void *buffer = (void*)kalloc();
+      pgtable[i] |= (V2P(buffer));
+      pgtable[i] |= PTE_P | PTE_U | PTE_W;
+      memmove(buffer, ptr+i*PGSIZE, PGSIZE);
+    }
+    
+    // 2.4. deallocate huge page.
+    kfree_huge(P2V(PTE_ADDR(*pde)));
+
+    // 2.5. insert va of pagetable in pde and set appropriate flags.
+    *pde = 0;
+    *pde |= (V2P(pgtable) & ~0xfff);
+    *pde |= PTE_P | PTE_U | PTE_W;
+  }
+  // 3. return
+  return 0;
+
 }

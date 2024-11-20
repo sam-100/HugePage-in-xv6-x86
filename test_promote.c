@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
 {
     if(argc != 2)
     {
-        printf(1, "Usage: %s <size_in_MBs>\n", argv[0]);
+        printf(1, "Usage: %s <MegaBytes_to_allocate>\n", argv[0]);
         exit();
     }
 
@@ -37,6 +37,15 @@ int main(int argc, char *argv[])
     }
     
     printf(1, "After page promotion: ");
+    print(num, buffer_size/INT_SIZE, HUGEPGSIZE/INT_SIZE);
+
+    if(demote(num, buffer_size) != 0)
+    {
+        printf(1, "demote() syscall failed\n");
+        return 0;
+    }
+    
+    printf(1, "After page demotion: ");
     print(num, buffer_size/INT_SIZE, HUGEPGSIZE/INT_SIZE);
 
     printf(1, "success!\n");

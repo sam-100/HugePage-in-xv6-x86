@@ -184,6 +184,7 @@ UPROGS=\
 	_test_getpa\
 	_test_promote\
 	_memstatus\
+	_cat\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)

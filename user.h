@@ -28,6 +28,7 @@ int getpagesize(void *va);
 int promote(void *va, int size);
 void printPDE(void *va);
 int get_free_pa_space();
+int demote(void *va, int size);
 
 // ulib.c
 int stat(const char*, struct stat*);

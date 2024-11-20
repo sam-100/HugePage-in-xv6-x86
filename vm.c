@@ -268,8 +268,9 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
     pte = walkpgdir(pgdir, (char*)a, 0);
     if(*pte & PTE_PS)
     {
+      // kfree_huge((char*)P2V(PTE_ADDR(*pte)));
       *pte = 0;
-      a += HUGEPGSIZE-PGSIZE;
+      a += HUGEPGSIZE - PGSIZE;
       continue;
     }
     if(!pte)

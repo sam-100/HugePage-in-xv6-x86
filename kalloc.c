@@ -158,6 +158,29 @@ kalloc_huge(void)
   return (char*)start;
 }
 
+int kfree_huge(char *va) {
+  if(!is_aligned((uint)va, HUGEPGSIZE))
+  {
+    cprintf("kfree_huge(): va not aligned properly.");
+    return 1;
+  }
+
+  // clear the memory
+  memset(va, 1, HUGEPGSIZE);
+
+  for(int i=NPDENTRIES-1; i>=0; i--)
+    kfree((char*)(va+i*PGSIZE));
+  
+  // for(int i=0; i<NPDENTRIES-1; i++)
+  // {
+  //   struct run *ptr = (struct run*)(va+i*PGSIZE);
+  //   ptr->next = (struct run *)((char*)ptr+PGSIZE);
+  // }
+  // struct run *lastpage = (struct run *)(va+(NPDENTRIES-1)*PGSIZE);
+  // lastpage->next = kmem.freelist;
+  // kmem.freelist = (struct run *)va;
+  return 0;
+}
 
 int kfreespace(void) {
   if(kmem.use_lock)

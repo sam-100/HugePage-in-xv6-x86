@@ -70,6 +70,7 @@ void            kinit1(void*, void*);
 void            kinit2(void*, void*);
 char*           kalloc_huge(void);
 int             kfreespace(void);
+int             kfree_huge(char *va);
 
 // kbd.c
 void            kbdintr(void);

@@ -108,6 +108,7 @@ extern int sys_getpagesize(void);
 extern int sys_promote(void);
 extern int sys_printPDE(void);
 extern int sys_get_free_pa_space(void);
+extern int sys_demote(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -136,6 +137,7 @@ static int (*syscalls[])(void) = {
 [SYS_promote] sys_promote, 
 [SYS_printPDE] sys_printPDE,
 [SYS_get_free_pa_space] sys_get_free_pa_space, 
+[SYS_demote] sys_demote, 
 };
 
 void

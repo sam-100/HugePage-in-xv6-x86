@@ -20,8 +20,10 @@
 #define SYS_link   19
 #define SYS_mkdir  20
 #define SYS_close  21
+
 #define SYS_getpa  22
 #define SYS_getpagesize 23
 #define SYS_promote 24
 #define SYS_printPDE 25
 #define SYS_get_free_pa_space 26
+#define SYS_demote 27
