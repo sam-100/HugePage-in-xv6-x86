@@ -162,27 +162,21 @@ sys_promote(void) {
 
 
   va = (void*)HUGEPGROUNDUP((uint)va);
-
   for(void *ptr=va; ptr+HUGEPGSIZE < end; ptr += HUGEPGSIZE)  // iterating at huge page intervals
   {
-    cprintf("curr va = %p, pdx = %d\n", ptr, PDX(ptr));
     void *buffer = (void*)V2P(kalloc_huge());
-    cprintf("Address: %p\n", buffer);
-
     memmove(P2V(buffer), ptr, HUGEPGSIZE);
     deallocate_pagetable(ptr);
-    cprintf("Deallocated 1024 pages at %p\n", ptr);
 
     // inserting the address and setting pse bit on
     pde_t *pde = &myproc()->pgdir[PDX(ptr)];
     *pde &= 0xfff;                                      // clear old address
     *pde |= PTE_ADDR(buffer);                           // add new buffer's physical address
     *pde |= PTE_P | PTE_W | PTE_U | PTE_PS;             // set pageset bit
-
-    // Invalidate TLB
-    lcr3(V2P(myproc()->pgdir));   
   }
 
+  // Invalidate TLB
+  lcr3(V2P(myproc()->pgdir));   
   return 0;
 }
 
