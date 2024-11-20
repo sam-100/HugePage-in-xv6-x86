@@ -95,14 +95,19 @@ sys_getpa(void)
 {
   int va;
   argint(0, &va);
-  int offset = va & 0xfff;
   pde_t *pgdir = myproc()->pgdir;
   pde_t pde = pgdir[PDX(va)];
+  if(pde & PTE_PS)                            // Huge page 
+  {
+    uint baseaddr = PTE_ADDR(pde);
+    int offset = 0x3fffff;
+    return (int)(baseaddr + offset);    
+  }
+  int offset = va & 0xfff;
   uint *pgtable = P2V(PTE_ADDR(pde));
   pte_t pte = pgtable[PTX(va)];
   int address = ((pte & 0xfffff000) + offset);
   return address;
-
 }
 
 int 

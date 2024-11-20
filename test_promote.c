@@ -10,7 +10,7 @@
 
 void print(const int *arr, int size, int jump) {
     for(int i=0; i<size; i += jump) 
-        printf(1, "%d, ", arr[i]);
+        printf(1, "%d | ", arr[i]);
     printf(1, "\n");
 }
 
