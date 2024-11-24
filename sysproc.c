@@ -135,6 +135,50 @@ sys_getpagesize(void)
   return 0;
 }
 
+void promote_page(void *va) {
+    void *buffer = kalloc_huge();
+    if(buffer == 0)
+      return;
+    buffer = (void*)V2P(buffer);
+    memmove(P2V(buffer), va, HUGEPGSIZE);
+    deallocate_pagetable(va);
+
+    // inserting the address and setting pse bit on
+    pde_t *pde = &myproc()->pgdir[PDX(va)];
+    *pde &= 0xfff;                                      // clear old address
+    *pde |= PTE_ADDR(buffer);                           // add new buffer's physical address
+    *pde |= PTE_P | PTE_W | PTE_U | PTE_PS;             // set pageset bit
+
+}
+
+void demote_page(void *va) {
+    // 2.1. If its not huge page, skip.
+    pte_t *pgdir = myproc()->pgdir;
+    pte_t *pde = &pgdir[PDX(va)];
+    if(!(*pde & PTE_PS))
+      return;
+
+    // 2.2. allocate a page table and all of its pages.
+    // 2.3. copy all data to newly allocated page table.
+    pte_t *pgtable = (pte_t*)kalloc();
+    memset(pgtable, 0, PGSIZE);
+    for(int i=0; i<NPTENTRIES; i++)
+    {
+      void *buffer = (void*)kalloc();
+      pgtable[i] |= (V2P(buffer));
+      pgtable[i] |= PTE_P | PTE_U | PTE_W;
+      memmove(buffer, va+i*PGSIZE, PGSIZE);
+    }
+    
+    // 2.4. deallocate huge page.
+    kfree_huge(P2V(PTE_ADDR(*pde)));
+
+    // 2.5. insert va of pagetable in pde and set appropriate flags.
+    *pde = 0;
+    *pde |= (V2P(pgtable) & ~0xfff);
+    *pde |= PTE_P | PTE_U | PTE_W;
+}
+
 int 
 sys_promote(void) {
   // 1. Get arguments
@@ -144,26 +188,17 @@ sys_promote(void) {
   argint(1, &size);
   void *end = va+size;
 
-
   va = (void*)HUGEPGROUNDUP((uint)va);
   for(void *ptr=va; ptr+HUGEPGSIZE < end; ptr += HUGEPGSIZE)  // iterating at huge page intervals
   {
-    void *buffer = kalloc_huge();
-    buffer = (void*)V2P(buffer);
-    memmove(P2V(buffer), ptr, HUGEPGSIZE);
-    deallocate_pagetable(ptr);
-
-    // inserting the address and setting pse bit on
-    pde_t *pde = &myproc()->pgdir[PDX(ptr)];
-    *pde &= 0xfff;                                      // clear old address
-    *pde |= PTE_ADDR(buffer);                           // add new buffer's physical address
-    *pde |= PTE_P | PTE_W | PTE_U | PTE_PS;             // set pageset bit
+    promote_page(ptr);
   }
 
   // Invalidate TLB
   lcr3(V2P(myproc()->pgdir));   
   return 0;
 }
+
 
 int 
 sys_demote(void) {
@@ -179,31 +214,7 @@ sys_demote(void) {
   // 2. For each pde from va to va+size 
   for(void* ptr = va; ptr < va+size; ptr += HUGEPGSIZE)
   {
-    // 2.1. If its not huge page, skip.
-    pte_t *pgdir = myproc()->pgdir;
-    pte_t *pde = &pgdir[PDX(ptr)];
-    if(!(*pde & PTE_PS))
-      continue;
-
-    // 2.2. allocate a page table and all of its pages.
-    // 2.3. copy all data to newly allocated page table.
-    pte_t *pgtable = (pte_t*)kalloc();
-    memset(pgtable, 0, PGSIZE);
-    for(int i=0; i<NPTENTRIES; i++)
-    {
-      void *buffer = (void*)kalloc();
-      pgtable[i] |= (V2P(buffer));
-      pgtable[i] |= PTE_P | PTE_U | PTE_W;
-      memmove(buffer, ptr+i*PGSIZE, PGSIZE);
-    }
-    
-    // 2.4. deallocate huge page.
-    kfree_huge(P2V(PTE_ADDR(*pde)));
-
-    // 2.5. insert va of pagetable in pde and set appropriate flags.
-    *pde = 0;
-    *pde |= (V2P(pgtable) & ~0xfff);
-    *pde |= PTE_P | PTE_U | PTE_W;
+    demote_page(ptr);
   }
   // 3. return
   return 0;
@@ -216,7 +227,7 @@ sys_huge_page_count(void) {
   argptr(0, (char**)&va, sizeof(int));
   argint(1, &size);
 
-  return k_huge_page_count(va, size);
+  return huge_page_count(va, size);
 }
 
 int 

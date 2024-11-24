@@ -137,10 +137,9 @@ kalloc_huge(void)
   // if not found, exit
   if(!curr || !start)
   {
-    cprintf("kalloc() failed!\n");
     if(kmem.use_lock)
       release(&kmem.lock);
-    exit();
+    return 0;
   }
 
   // allocate
@@ -171,14 +170,6 @@ int kfree_huge(char *va) {
   for(int i=NPDENTRIES-1; i>=0; i--)
     kfree((char*)(va+i*PGSIZE));
   
-  // for(int i=0; i<NPDENTRIES-1; i++)
-  // {
-  //   struct run *ptr = (struct run*)(va+i*PGSIZE);
-  //   ptr->next = (struct run *)((char*)ptr+PGSIZE);
-  // }
-  // struct run *lastpage = (struct run *)(va+(NPDENTRIES-1)*PGSIZE);
-  // lastpage->next = kmem.freelist;
-  // kmem.freelist = (struct run *)va;
   return 0;
 }
 

@@ -422,7 +422,7 @@ int deallocate_pagetable(void *va) {
   return 0;
 }
 
-int k_huge_page_count(void *va, int size) {
+int huge_page_count(void *va, int size) {
   int count = 0;
   void *start_aligned = (void*)HUGEPGROUNDUP((uint)(va));
   pte_t *pgdir = myproc()->pgdir;

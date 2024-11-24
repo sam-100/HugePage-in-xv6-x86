@@ -189,7 +189,7 @@ void            switchkvm(void);
 int             copyout(pde_t*, uint, void*, uint);
 void            clearpteu(pde_t *pgdir, char *uva);
 int             deallocate_pagetable(void *va);
-int             k_huge_page_count(void *va, int size);
+int             huge_page_count(void *va, int size);
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))

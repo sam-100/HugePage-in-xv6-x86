@@ -3,12 +3,12 @@
 #include "user.h"
 
 // definitions 
-
 void error(const char *message) {
     printf(1, "%s\n", message);
     exit();
 }
 
+// returns time takent to access entire array in miliseconds
 int access_time(int *arr, int size) {
     int start, end;
     start = uptime();
@@ -55,7 +55,7 @@ int main(int argc, char **argv) {
     // 4. Difference in access time
     if(time_after < time_before)
     {
-        float performance = (float)(time_before-time_after)/time_before;
+        int performance = (float)(time_before-time_after)/time_before*100;
         printf(1, "Performance improvement by %d percent.\n", performance);
     }
 
