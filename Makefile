@@ -181,10 +181,9 @@ UPROGS=\
 	_usertests\
 	_wc\
 	_zombie\
-	_test_getpa\
-	_test_promote\
+	_test_basic\
+	_test_performance\
 	_memstatus\
-	_cat\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)

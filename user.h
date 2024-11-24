@@ -23,12 +23,11 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
-int getpa(void *va);
-int getpagesize(void *va);
+
 int promote(void *va, int size);
-void printPDE(void *va);
-int get_free_pa_space();
 int demote(void *va, int size);
+int huge_page_count(void *va, int size);
+int get_free_pa_space();
 
 // ulib.c
 int stat(const char*, struct stat*);

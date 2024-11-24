@@ -287,27 +287,6 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
   return newsz;
 }
 
-int get_pa_size(const pte_t *pgdir) {
-  int cnt = 0;
-  for(int i=0; i<NPDENTRIES; i++)
-  {
-    if((pgdir[i] & PTE_P) == 0)
-      continue;
-    if((pgdir[i] & PTE_PS) != 0)
-    {
-      cnt += NPTENTRIES; 
-      continue;
-    }
-    pte_t *pgtable = P2V(PTE_ADDR(pgdir[i]));
-    for(int i=0; i<NPTENTRIES; i++)
-    {
-      if((pgtable[i] & PTE_P) != 0)
-        cnt++;  // cprintf("Physical memory allocated = %d Pages\n", get_pa_size(myproc()->pgdir));
-
-    }
-  }
-  return cnt;
-}
 
 // Free a page table and all the physical memory pages
 // in the user part.
@@ -443,6 +422,18 @@ int deallocate_pagetable(void *va) {
   return 0;
 }
 
+int k_huge_page_count(void *va, int size) {
+  int count = 0;
+  void *start_aligned = (void*)HUGEPGROUNDUP((uint)(va));
+  pte_t *pgdir = myproc()->pgdir;
+  for(void *ptr = start_aligned; ptr < va+size; ptr += HUGEPGSIZE)
+  {
+    pte_t pde = pgdir[PDX(ptr)];
+    if(pde & PTE_PS)
+      count++;
+  }
+  return count;
+}
 
 //PAGEBREAK!
 // Blank page.

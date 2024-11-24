@@ -135,29 +135,8 @@ sys_getpagesize(void)
   return 0;
 }
 
-// void enable_paging_extension() {
-//     uint cr4;
-//     asm volatile ("mov %%cr4, %0" : "=r" (cr4));
-//     cr4 |= CR4_PSE;
-//     asm volatile ("mov %0, %%cr4" :: "r" (cr4));
-// }
-
-// int is_paging_extension_enabled() {
-//     uint cr4;
-//     asm volatile ("mov %%cr4, %0" : "=r" (cr4));
-//     return (cr4 & CR4_PSE) != 0;
-// }
-
 int 
 sys_promote(void) {
-  // enable_paging_extension();
-  // lcr3(V2P(myproc()->pgdir));   
-  // if(!is_paging_extension_enabled())
-  // {
-  //   cprintf("Paging is disabled.\n");
-  //   exit();
-  // }
-
   // 1. Get arguments
   void *va;
   int size;
@@ -169,7 +148,8 @@ sys_promote(void) {
   va = (void*)HUGEPGROUNDUP((uint)va);
   for(void *ptr=va; ptr+HUGEPGSIZE < end; ptr += HUGEPGSIZE)  // iterating at huge page intervals
   {
-    void *buffer = (void*)V2P(kalloc_huge());
+    void *buffer = kalloc_huge();
+    buffer = (void*)V2P(buffer);
     memmove(P2V(buffer), ptr, HUGEPGSIZE);
     deallocate_pagetable(ptr);
 
@@ -183,21 +163,6 @@ sys_promote(void) {
   // Invalidate TLB
   lcr3(V2P(myproc()->pgdir));   
   return 0;
-}
-
-void 
-sys_printPDE(void)
-{
-  void *va;
-  argptr(0, (char**)&va, sizeof(va));
-
-  cprintf("PDE = %p\n", myproc()->pgdir[PDX(va)]);
-}
-
-int 
-sys_get_free_pa_space(void)
-{
-  return kfreespace();
 }
 
 int 
@@ -242,5 +207,20 @@ sys_demote(void) {
   }
   // 3. return
   return 0;
+}
 
+int 
+sys_huge_page_count(void) {
+  void *va;
+  int size;
+  argptr(0, (char**)&va, sizeof(int));
+  argint(1, &size);
+
+  return k_huge_page_count(va, size);
+}
+
+int 
+sys_get_free_pa_space(void)
+{
+  return kfreespace();
 }
